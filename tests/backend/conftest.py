@@ -43,10 +43,10 @@ def setup_db():
 
     db = TestingSessionLocal()
     
-    # Insert 5 fake jobs for tests
+    # Insert 55 fake jobs for tests
     categories = ["Software Development", "Data Science"]
     jobs = []
-    for i in range(1, 6):
+    for i in range(1, 56):
         job = Job(
             title=f"Test Engineer {i}",
             company=f"Test Corp {i}",
