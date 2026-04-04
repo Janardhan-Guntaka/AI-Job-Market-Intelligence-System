@@ -13,7 +13,10 @@ user_model.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="AI Job Market Intelligence API",
-    description="Real-time job market intelligence with salary trends, skill demand analysis, and hiring velocity metrics.",
+    description=(
+        "Real-time job market intelligence with salary trends, "
+        "skill demand analysis, and hiring velocity metrics."
+    ),
     version="1.0.0",
 )
 
