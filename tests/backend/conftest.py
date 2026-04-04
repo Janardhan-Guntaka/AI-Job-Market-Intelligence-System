@@ -37,10 +37,31 @@ def override_get_db():
 def setup_db():
     Base.metadata.create_all(bind=engine)
     app.dependency_overrides[get_db] = override_get_db
-    # Seed test dataset
-    from app.services.pipeline import seed_jobs
+    from app.models.job import Job
+    import json
+    from datetime import datetime
+
     db = TestingSessionLocal()
-    seed_jobs(db, 50)
+    
+    # Insert 5 fake jobs for tests
+    categories = ["Software Development", "Data Science"]
+    jobs = []
+    for i in range(1, 6):
+        job = Job(
+            title=f"Test Engineer {i}",
+            company=f"Test Corp {i}",
+            location="Remote",
+            remote="Remote",
+            category=categories[i % 2],
+            salary_min=100000.0 + (i * 5000),
+            salary_max=120000.0 + (i * 5000),
+            skills=json.dumps(["Python", "React"]),
+            experience_level="Mid",
+            posted_date=datetime.utcnow(),
+            description=f"This is a test job description {i}"
+        )
+        db.add(job)
+    db.commit()
     db.close()
     yield
     Base.metadata.drop_all(bind=engine)
