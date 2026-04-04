@@ -13,3 +13,6 @@ google-auth==2.22.0
 pyjwt==2.8.0
 python-dotenv==1.0.1
 beautifulsoup4==4.12.3
+
+requests==2.32.3
+six==1.17.0
