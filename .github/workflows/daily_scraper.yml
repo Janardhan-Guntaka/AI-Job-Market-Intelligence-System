@@ -1,0 +1,45 @@
+name: Daily Job Scraper
+
+# Run automatically at 01:00 PM UTC every day
+on:
+  schedule:
+    - cron: '0 13 * * *'
+  # Allow manual trigger from the GitHub Actions UI
+  workflow_dispatch:
+
+jobs:
+  scrape-jobs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to commit and push changes back
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        working-directory: server
+        run: |
+          pip install -r requirements.txt
+          pip install beautifulsoup4
+
+      - name: Run Scraper Script
+        working-directory: server
+        run: python scripts/run_scraper.py
+
+      - name: Commit and Push Database Update
+        run: |
+          git config --global user.name "AI Job Intel Bot"
+          git config --global user.email "bot@ai-job-intel.com"
+          
+          # Force add the database file (even if it's in .gitignore)
+          git add -f server/jobs.db
+          
+          # Only commit if there are changes
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update: daily scraped jobs [skip ci]" && git push)
