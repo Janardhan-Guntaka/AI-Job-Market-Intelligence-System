@@ -2,13 +2,13 @@ import httpx
 import json
 import re
 from datetime import datetime
-from bs4 import BeautifulSoup
 from typing import List
 
 from sqlalchemy.orm import Session
 from app.models.job import Job
 
 REMOTIVE_API_URL = "https://remotive.com/api/remote-jobs"
+
 
 def extract_salary(salary_str: str):
     """
@@ -21,10 +21,10 @@ def extract_salary(salary_str: str):
     # Look for patterns like $100k, 100,000, 100k-150k, etc.
     # Simplify: find all numbers (k = 1000)
     salary_str = salary_str.lower().replace(",", "")
-    
+
     # Simple regex to catch numbers followed optionally by k
     matches = re.findall(r"(\d+(?:\.\d+)?)\s*(k|m)?", salary_str)
-    
+
     amounts = []
     for num, multiplier in matches:
         val = float(num)
@@ -33,15 +33,16 @@ def extract_salary(salary_str: str):
         if multiplier == 'm':
             val *= 1000000
         amounts.append(val)
-        
+
     if not amounts:
         return 0.0, 0.0
-        
+
     amounts.sort()
     # Assume the lowest represents min and highest represents max (if multiple)
     if len(amounts) == 1:
         return float(amounts[0]), float(amounts[0])
     return float(amounts[0]), float(amounts[-1])
+
 
 def clean_html(raw_html: str) -> str:
     if not raw_html:
@@ -79,13 +80,13 @@ def run_daily_scraper(db: Session, max_jobs: int = 150):
     for raw in raw_jobs:
         title = raw.get("title", "Unknown Title")
         company = raw.get("company_name", "Unknown Company")
-        
+
         # Check if exists
         existing = db.query(Job).filter(Job.title == title, Job.company == company).first()
-        
+
         salary_str = raw.get("salary", "")
         sal_min, sal_max = extract_salary(salary_str)
-        
+
         # Determine experience level loosely
         desc = (raw.get("description", "")).lower()
         title_lower = title.lower()
@@ -100,7 +101,7 @@ def run_daily_scraper(db: Session, max_jobs: int = 150):
             exp_level = "Principal"
         elif "staff" in title_lower:
             exp_level = "Staff"
-            
+
         tags = raw.get("tags", [])
         if not tags:
             # Fallback extracting common skills from description

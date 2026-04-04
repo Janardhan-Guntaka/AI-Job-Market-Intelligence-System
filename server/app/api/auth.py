@@ -18,15 +18,18 @@ router = APIRouter()
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com")
 JWT_SECRET = os.getenv("JWT_SECRET", "super-secret-key-change-in-production")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 7 days
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
+
 
 class TokenRequest(BaseModel):
     credential: str
+
 
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
     user: dict
+
 
 def create_access_token(data: dict):
     to_encode = data.copy()
@@ -35,13 +38,14 @@ def create_access_token(data: dict):
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=ALGORITHM)
     return encoded_jwt
 
+
 @router.post("/auth/google", response_model=TokenResponse)
 def google_auth(request: TokenRequest, db: Session = Depends(get_db)):
     try:
         # Verify the Google JWT token
         idinfo = id_token.verify_oauth2_token(
-            request.credential, 
-            requests.Request(), 
+            request.credential,
+            requests.Request(),
             GOOGLE_CLIENT_ID
         )
 
@@ -61,7 +65,7 @@ def google_auth(request: TokenRequest, db: Session = Depends(get_db)):
             db_user.last_login = datetime.utcnow()
             db_user.name = name
             db_user.picture = picture
-        
+
         db.commit()
         db.refresh(db_user)
 

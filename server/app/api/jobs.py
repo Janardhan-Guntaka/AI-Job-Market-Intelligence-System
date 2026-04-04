@@ -34,7 +34,7 @@ def list_jobs(
 
     if search:
         query = query.filter(
-            Job.title.ilike(f"%{search}%") | 
+            Job.title.ilike(f"%{search}%") |
             Job.company.ilike(f"%{search}%") |
             Job.skills.ilike(f"%{search}%") |
             Job.category.ilike(f"%{search}%")
