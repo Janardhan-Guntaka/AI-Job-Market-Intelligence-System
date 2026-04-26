@@ -18,3 +18,7 @@ class Job(Base):
     experience_level = Column(String(50))
     posted_date = Column(DateTime, default=datetime.utcnow)
     description = Column(Text)
+    # Multi-portal deduplication fields
+    source = Column(String(100), default="remotive")       # portal name
+    source_url = Column(String(1000), unique=True, index=True, nullable=True)  # canonical dedup key
+    apply_url = Column(String(1000), nullable=True)        # application link

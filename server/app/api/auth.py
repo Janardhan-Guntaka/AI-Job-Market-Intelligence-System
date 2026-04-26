@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from google.oauth2 import id_token
@@ -19,6 +20,8 @@ GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "YOUR_GOOGLE_CLIENT_ID.apps.goo
 JWT_SECRET = os.getenv("JWT_SECRET", "super-secret-key-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
+
+_bearer_scheme = HTTPBearer(auto_error=False)
 
 
 class TokenRequest(BaseModel):
@@ -85,3 +88,34 @@ def google_auth(request: TokenRequest, db: Session = Depends(get_db)):
 
     except ValueError as e:
         raise HTTPException(status_code=401, detail=f"Invalid Google token: {str(e)}")
+
+
+# ---------------------------------------------------------------------------
+# Reusable JWT dependency — use as Depends(get_current_user)
+# ---------------------------------------------------------------------------
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Security(_bearer_scheme),
+    db: Session = Depends(get_db),
+):
+    """
+    Validate the Bearer JWT token and return the User ORM object.
+    Raises HTTP 401 if token is missing, expired, or invalid.
+    """
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Authentication required. Please log in.")
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if not email:
+            raise HTTPException(status_code=401, detail="Invalid token payload.")
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Session expired. Please log in again.")
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid authentication token.")
+
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found.")
+    return user

@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 
 class JobBase(BaseModel):
@@ -14,6 +14,8 @@ class JobBase(BaseModel):
     skills: str
     experience_level: str
     description: str
+    source: Optional[str] = None
+    apply_url: Optional[str] = None
 
 
 class JobCreate(JobBase):

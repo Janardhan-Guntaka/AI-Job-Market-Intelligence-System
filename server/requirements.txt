@@ -1,18 +1,40 @@
+# --- Core API ---
 fastapi==0.111.0
 uvicorn[standard]==0.29.0
 sqlalchemy==2.0.30
 pydantic==2.7.1
 pydantic-settings==2.2.1
-faker==24.9.0
-httpx==0.27.0
-pytest==8.2.0
-pytest-asyncio==0.23.6
-flake8==7.0.0
 python-multipart==0.0.9
+python-dotenv==1.0.1
+
+# --- HTTP & Scraping ---
+httpx==0.27.0
+requests==2.32.3
+beautifulsoup4==4.12.3
+lxml==5.2.2
+
+# --- Auth ---
 google-auth==2.22.0
 pyjwt==2.8.0
-python-dotenv==1.0.1
-beautifulsoup4==4.12.3
 
-requests==2.32.3
-six==1.17.0
+# --- Resume Parsing ---
+PyPDF2==3.0.1
+python-docx==1.1.2
+
+# --- AI / RAG Pipeline ---
+openai==1.30.3
+langchain==0.2.1
+langchain-openai==0.1.8
+langchain-community==0.2.1
+langchain-core==0.2.5
+faiss-cpu==1.8.0
+sentence-transformers==2.7.0
+tiktoken==0.7.0
+
+# --- Testing ---
+pytest==8.2.0
+pytest-asyncio==0.23.6
+httpx==0.27.0
+
+# --- Code Quality ---
+flake8==7.0.0

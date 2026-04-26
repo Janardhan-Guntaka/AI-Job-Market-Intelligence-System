@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 import json
@@ -29,6 +29,7 @@ def list_jobs(
     remote: Optional[str] = None,
     experience: Optional[str] = None,
     min_salary: Optional[float] = None,
+    source: Optional[str] = None,
 ):
     query = db.query(Job)
 
@@ -47,6 +48,8 @@ def list_jobs(
         query = query.filter(Job.experience_level == experience)
     if min_salary:
         query = query.filter(Job.salary_min >= min_salary)
+    if source:
+        query = query.filter(Job.source == source)
 
     query = query.order_by(Job.posted_date.desc())
     total = query.count()
@@ -166,4 +169,41 @@ def summary_stats(db: Session = Depends(get_db)):
 @router.get("/categories")
 def list_categories(db: Session = Depends(get_db)):
     cats = db.query(Job.category).distinct().all()
-    return [c[0] for c in cats]
+    return [c[0] for c in cats if c[0]]
+
+
+@router.get("/sources")
+def list_sources(db: Session = Depends(get_db)):
+    """Return distinct job portals currently in the database."""
+    sources = db.query(Job.source).distinct().all()
+    return [s[0] for s in sources if s[0]]
+
+
+@router.post("/scrape")
+def trigger_scrape(
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
+    """
+    On-demand scrape trigger — runs all portal scrapers in the background.
+    Returns immediately with a job ID; use GET /jobs to see new results.
+    """
+    from app.services.scraper import run_daily_scraper  # noqa: PLC0415
+
+    def _run():
+        import logging  # noqa: PLC0415
+        log = logging.getLogger(__name__)
+        log.info("On-demand scrape triggered via API")
+        from app.database import SessionLocal  # noqa: PLC0415
+        scrape_db = SessionLocal()
+        try:
+            result = run_daily_scraper(scrape_db)
+            log.info("On-demand scrape complete: %s", result)
+        finally:
+            scrape_db.close()
+
+    background_tasks.add_task(_run)
+    return {
+        "status": "started",
+        "message": "Scraping all portals in background. Check /api/stats/summary for updated counts.",
+    }

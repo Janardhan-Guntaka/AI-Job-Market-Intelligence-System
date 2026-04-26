@@ -5,9 +5,10 @@ import Navbar from './components/Navbar'
 import Dashboard from './pages/Dashboard'
 import JobExplorer from './pages/JobExplorer'
 import Analytics from './pages/Analytics'
+import CareerOps from './pages/CareerOps'
 import Login from './pages/Login'
 
-// A simple unprotected wrapper that ensures the user is logged in
+// A simple token-based auth guard
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   if (!token) {
@@ -16,7 +17,7 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Represents the authenticated application shell
+// The authenticated application shell — sidebar + navbar + content
 const AppShell = ({ children }) => {
   return (
     <div className="flex min-h-screen">
@@ -32,7 +33,6 @@ const AppShell = ({ children }) => {
 };
 
 export default function App() {
-  // Use Vite env for Google Client ID (will default to a placeholder string if not set)
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 
   return (
@@ -40,21 +40,30 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
-          
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <AppShell><Dashboard /></AppShell>
             </ProtectedRoute>
           } />
+
           <Route path="/jobs" element={
             <ProtectedRoute>
               <AppShell><JobExplorer /></AppShell>
             </ProtectedRoute>
           } />
+
           <Route path="/analytics" element={
             <ProtectedRoute>
               <AppShell><Analytics /></AppShell>
+            </ProtectedRoute>
+          } />
+
+          {/* ← New CareerOps AI page */}
+          <Route path="/career-ops" element={
+            <ProtectedRoute>
+              <AppShell><CareerOps /></AppShell>
             </ProtectedRoute>
           } />
         </Routes>

@@ -3,24 +3,38 @@ version: '3.9'
 services:
   backend:
     build: ./server
-    container_name: ai_job_backend
+    container_name: careerops_backend
     ports:
       - "8000:8000"
     volumes:
-      - ./server:/app
+      - ./server/jobs.db:/app/jobs.db  # persist DB only, not the entire source
     environment:
       - PYTHONUNBUFFERED=1
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ADZUNA_APP_ID=${ADZUNA_APP_ID:-}
+      - ADZUNA_APP_KEY=${ADZUNA_APP_KEY:-}
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   frontend:
     image: node:20-alpine
-    container_name: ai_job_frontend
+    container_name: careerops_frontend
     working_dir: /app
     volumes:
       - ./client:/app
+      - /app/node_modules  # anonymous volume prevents host node_modules from overriding
     ports:
       - "5173:5173"
     command: sh -c "npm install && npm run dev -- --host"
+    environment:
+      - VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
