@@ -1,14 +1,11 @@
-const { test, expect } = require('@playwright/test')
+﻿const { test, expect } = require('@playwright/test')
 
 test.describe('AI Job Market Intelligence System', () => {
   test('dashboard page loads and shows KPI cards', async ({ page }) => {
     await page.goto('/dashboard')
     await expect(page).toHaveTitle(/AI Job Market Intelligence/)
-    // Sidebar present
     await expect(page.locator('#sidebar')).toBeVisible()
-    // Navbar present
     await expect(page.locator('#navbar')).toBeVisible()
-    // KPI cards
     await expect(page.locator('#kpi-total-jobs')).toBeVisible({ timeout: 15000 })
     await expect(page.locator('#kpi-avg-salary')).toBeVisible()
     await expect(page.locator('#kpi-remote-jobs')).toBeVisible()
@@ -32,7 +29,6 @@ test.describe('AI Job Market Intelligence System', () => {
 
   test('job cards render on Job Explorer', async ({ page }) => {
     await page.goto('/jobs')
-    // Wait for loading to finish
     await expect(page.locator('#jobs-loading')).not.toBeVisible({ timeout: 15000 })
     const cards = page.locator('[data-testid="job-card"]')
     await expect(cards.first()).toBeVisible({ timeout: 15000 })
@@ -45,7 +41,6 @@ test.describe('AI Job Market Intelligence System', () => {
     await expect(page.locator('#jobs-loading')).not.toBeVisible({ timeout: 15000 })
     await page.fill('#job-search', 'Engineer')
     await page.waitForTimeout(800)
-    // Should still have results or empty state (no error)
     const errorEl = page.locator('text=Error')
     await expect(errorEl).not.toBeVisible()
   })
